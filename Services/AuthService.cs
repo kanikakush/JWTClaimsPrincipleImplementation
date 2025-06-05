@@ -1,5 +1,6 @@
 ﻿using JWTClaimsPrincipleImplementation.Data;
 using JWTClaimsPrincipleImplementation.Entities;
+using JWTClaimsPrincipleImplementation.Interface;
 using JWTClaimsPrincipleImplementation.Model;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ using System.Text;
 
 namespace JWTClaimsPrincipleImplementation.Services
 {
-    public class AuthService
+    public class AuthService: IAuthService // Assuming IAuthService is defined in Interface/IAuthService.cs
     {
         private readonly IConfiguration configuration;
         private readonly MyDbContext context; // Assuming you have a DbContext for database operations
@@ -32,12 +33,11 @@ namespace JWTClaimsPrincipleImplementation.Services
                 PasswordHash = new PasswordHasher<User>()
                     .HashPassword(null, request.Password) // Hashing the password
             };
-            user.Username = request.Username;
-            user.PasswordHash = new PasswordHasher<User>()
-                .HashPassword(user, request.Password);
+            await context.Users.AddAsync(user);
+            await context.SaveChangesAsync();
             return user;
         }
-        public async Task<User?> Login(UserDto request)
+        public async Task<string?> LoginAsync(UserDto request)
         {
             User? user = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
             if (user is null)
@@ -47,12 +47,12 @@ namespace JWTClaimsPrincipleImplementation.Services
                 .VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (passwordVerificationResult == PasswordVerificationResult.Failed)
             {
-                return Unauthorized(new { Message = "Invalid username or password" });
+                return null;
             }
             //instead of returning user , you can return a JWT token here
             string token = CreateToken(user);
             //return Ok(new { Message = "Login successful", User = user });
-            return Ok(new { Message = "Login successful", Token = token });
+            return token;
         }
         private string CreateToken(User user)
         {
