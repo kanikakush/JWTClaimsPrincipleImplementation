@@ -1,6 +1,7 @@
 ﻿using JWTClaimsPrincipleImplementation.Entities;
 using JWTClaimsPrincipleImplementation.Interface;
 using JWTClaimsPrincipleImplementation.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JWTClaimsPrincipleImplementation.Controllers
@@ -31,6 +32,12 @@ namespace JWTClaimsPrincipleImplementation.Controllers
                 return Unauthorized(new { Message = "Invalid username or password" });
 
             return Ok(new { Message = "Login successful", Token = token });
+        }
+        [HttpGet("Auth-endpoint")]
+        [Authorize]
+        public ActionResult<string> AuthEndpoint()
+        {
+            return Ok("You are authenticated and authorized to access this endpoint.");
         }
     }
 }
