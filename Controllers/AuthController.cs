@@ -39,5 +39,11 @@ namespace JWTClaimsPrincipleImplementation.Controllers
         {
             return Ok("You are authenticated and authorized to access this endpoint.");
         }
+        [HttpGet("Admin-endpoint")]
+        [Authorize(Roles = "Admin")]
+        public ActionResult<string> AdminEndpointCheck()
+        {
+            return Ok("You are authenticated and authorized to access this endpoint.");
+        }
     }
 }
