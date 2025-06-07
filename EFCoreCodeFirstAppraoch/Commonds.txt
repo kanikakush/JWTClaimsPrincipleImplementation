@@ -4,5 +4,5 @@
 
 //after modifying any db enitity from code , run the following commands
 
-4. dotnet ef migrations add UpdatedUserEntity
+4. dotnet ef migrations add <UpdatedUserEntity or any name>
 5. dotnet ef database update

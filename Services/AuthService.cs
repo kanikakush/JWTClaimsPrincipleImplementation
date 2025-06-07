@@ -3,16 +3,16 @@ using JWTClaimsPrincipleImplementation.Entities;
 using JWTClaimsPrincipleImplementation.Interface;
 using JWTClaimsPrincipleImplementation.Model;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace JWTClaimsPrincipleImplementation.Services
 {
-    public class AuthService: IAuthService // Assuming IAuthService is defined in Interface/IAuthService.cs
+    public class AuthService : IAuthService // Assuming IAuthService is defined in Interface/IAuthService.cs
     {
         private readonly IConfiguration configuration;
         private readonly MyDbContext context; // Assuming you have a DbContext for database operations
@@ -37,7 +37,7 @@ namespace JWTClaimsPrincipleImplementation.Services
             await context.SaveChangesAsync();
             return user;
         }
-        public async Task<string?> LoginAsync(UserDto request)
+        public async Task<TokenResponseDto?> LoginAsync(UserDto request)
         {
             User? user = await context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
             if (user is null)
@@ -49,10 +49,24 @@ namespace JWTClaimsPrincipleImplementation.Services
             {
                 return null;
             }
-            //instead of returning user , you can return a JWT token here
-            string token = CreateToken(user);
+            var token = new TokenResponseDto{
+                AccessToken = CreateToken(user), // Create JWT token
+                RefreshUser = await GenerateAndSaveRefreshToken(user) // Return the user information
+            };
             //return Ok(new { Message = "Login successful", User = user });
             return token;
+        }
+        private async Task<string?> GenerateAndSaveRefreshToken(User user)
+        {
+            var randomNuber = new byte[32]; // Generate a random number for the refresh token
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomNuber);
+            var refreshToken = Convert.ToBase64String(randomNuber);
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1); // Set expiry time for the refresh token
+            context.Users.Update(user);
+            await context.SaveChangesAsync();
+            return refreshToken;
         }
         private string CreateToken(User user)
         {
@@ -73,6 +87,21 @@ namespace JWTClaimsPrincipleImplementation.Services
                 signingCredentials: creds
                 );
             return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+        }
+
+        public async Task<TokenResponseDto?> RefreshTokenAsync(RefreshTokenRequestDto request)
+        {
+            var user = await context.Users.FindAsync(request.UserId);
+            if(user is null || user.RefreshToken != request.RefreshUser || user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            {
+                return null; // Invalid or expired refresh token
+            }
+            var token = new TokenResponseDto
+            {
+                AccessToken = CreateToken(user), // Create a new JWT token
+                RefreshUser = await GenerateAndSaveRefreshToken(user) // Generate and save a new refresh token
+            };
+            return token;
         }
     }
 }

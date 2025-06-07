@@ -25,11 +25,20 @@ namespace JWTClaimsPrincipleImplementation.Controllers
             return Ok(new { Message = "User registered successfully", User = user });
         }
         [HttpPost("login")]
-        public async Task<ActionResult<string?>> Login(UserDto request)
+        public async Task<ActionResult<TokenResponseDto?>> Login(UserDto request)
         {
             var token = await authService.LoginAsync(request);
             if (token is null)
                 return Unauthorized(new { Message = "Invalid username or password" });
+
+            return Ok(new { Message = "Login successful", Token = token });
+        }
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<TokenResponseDto?>> RefreshToken(RefreshTokenRequestDto request)
+        {
+            var token = await authService.RefreshTokenAsync(request);
+            if (token is null)
+                return Unauthorized(new { Message = "Invalid/Expired Token" });
 
             return Ok(new { Message = "Login successful", Token = token });
         }
