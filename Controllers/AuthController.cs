@@ -1,4 +1,5 @@
-﻿using JWTClaimsPrincipleImplementation.Entities;
+﻿using JWTClaimsPrincipleImplementation.CustomFilter;
+using JWTClaimsPrincipleImplementation.Entities;
 using JWTClaimsPrincipleImplementation.Interface;
 using JWTClaimsPrincipleImplementation.Model;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,7 @@ namespace JWTClaimsPrincipleImplementation.Controllers
         {
             this.authService = authService;
         }
+        [MinimumRoleAuthorize(["Admin","SuperAdmin"])]
         [HttpPost("register")]
         public async Task<ActionResult<User?>> Register(UserDto request)
         {

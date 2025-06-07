@@ -31,7 +31,8 @@ namespace JWTClaimsPrincipleImplementation.Services
             {
                 Username = request.Username,
                 PasswordHash = new PasswordHasher<User>()
-                    .HashPassword(null, request.Password) // Hashing the password
+                    .HashPassword(null, request.Password),// Hashing the password
+                Role = request.Role ?? "Admin" // Default role if not specified
             };
             await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
