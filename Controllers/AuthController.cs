@@ -17,6 +17,7 @@ namespace JWTClaimsPrincipleImplementation.Controllers
             this.authService = authService;
         }
         [MinimumRoleAuthorize(["Admin","SuperAdmin"])]
+        [Idempotent(cacheDurationInMinutes: 5)]
         [HttpPost("register")]
         public async Task<ActionResult<User?>> Register(UserDto request)
         {

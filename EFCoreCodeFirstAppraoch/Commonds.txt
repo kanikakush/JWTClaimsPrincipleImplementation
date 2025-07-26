@@ -6,3 +6,8 @@
 
 4. dotnet ef migrations add <UpdatedUserEntity or any name>
 5. dotnet ef database update
+
+
+// after JWT let's explore Idempotency in HTTP APIs	
+
+// 1. Idempotency is a property of an operation that allows it to be applied multiple times without changing the result beyond the initial application. In HTTP, this means that making the same request multiple times will not change the state of the server after the first request.
